@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>
+RAG Simulator - Understanding Retrieval Augmented Generation
+</title>
+
+
+<style>
+
+:root {
+
+    --bg: #07111f;
+    --card: #121d33;
+    --card2: #1b2945;
+    --border: #31466d;
+    --primary: #6d8cff;
+    --green: #38d996;
+    --text: #f5f7ff;
+    --muted: #aab6d5;
+
+}
+
+
+* {
+
+    box-sizing: border-box;
+
+}
+
+
+
+body {
+
+    margin:0;
+
+    font-family:
+    Inter,
+    Arial,
+    sans-serif;
+
+    background:
+    radial-gradient(
+        circle at top,
+        #20376b,
+        transparent 40%
+    ),
+    var(--bg);
+
+    color:var(--text);
+
+}
+
+
+
+.container {
+
+    max-width:1200px;
+
+    margin:auto;
+
+    padding:30px;
+
+}
+
+
+
+.header {
+
+    text-align:center;
+
+    margin-bottom:30px;
+
+}
+
+
+
+.header h1 {
+
+    font-size:36px;
+
+    color:var(--primary);
+
+    margin-bottom:10px;
+
+}
+
+
+
+.header p {
+
+    color:var(--muted);
+
+}
+
+
+
+
+.pipeline {
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(8,1fr);
+
+    gap:10px;
+
+    margin-bottom:30px;
+
+}
+
+
+
+.step {
+
+    background:var(--card);
+
+    border:
+
+    1px solid var(--border);
+
+    padding:12px;
+
+    border-radius:12px;
+
+    text-align:center;
+
+    font-size:13px;
+
+    transition:.4s;
+
+}
+
+
+
+.step.active {
+
+    background:var(--primary);
+
+    transform:
+    translateY(-5px);
+
+}
+
+
+
+.step-number {
+
+    display:block;
+
+    font-size:20px;
+
+    font-weight:bold;
+
+    margin-bottom:5px;
+
+}
+
+
+
+
+.grid {
+
+    display:grid;
+
+    grid-template-columns:
+
+    2fr
+    1fr;
+
+    gap:20px;
+
+}
+
+
+
+
+.card {
+
+    background:
+
+    rgba(18,29,51,.95);
+
+    border:
+
+    1px solid var(--border);
+
+    border-radius:18px;
+
+    padding:22px;
+
+    margin-bottom:20px;
+
+}
+
+
+
+.card h2 {
+
+    margin-top:0;
+
+}
+
+
+
+
+button {
+
+    background:
+
+    var(--primary);
+
+    color:white;
+
+    border:0;
+
+    padding:
+
+    12px 22px;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    font-size:15px;
+
+}
+
+
+
+button:hover {
+
+    opacity:.85;
+
+}
+
+
+
+
+.question-box {
+
+    display:flex;
+
+    gap:10px;
+
+}
+
+
+
+input {
+
+    flex:1;
+
+    padding:14px;
+
+    background:#091426;
+
+    color:white;
+
+    border:
+
+    1px solid var(--border);
+
+    border-radius:10px;
+
+    font-size:15px;
+
+}
+
+
+
+
+
+.chunk {
+
+    background:
+
+    var(--card2);
+
+    border-left:
+
+    4px solid var(--primary);
+
+    padding:15px;
+
+    border-radius:10px;
+
+    margin:10px 0;
+
+}
+
+
+
+.chunk.relevant {
+
+    border-left-color:
+
+    var(--green);
+
+}
+
+
+
+
+
+.vector {
+
+    background:#091426;
+
+    padding:12px;
+
+    border-radius:10px;
+
+    color:#7dffbf;
+
+    font-family:monospace;
+
+}
+
+
+
+
+
+.score {
+
+    color:
+
+    var(--green);
+
+    font-weight:bold;
+
+}
+
+
+
+
+.prompt {
+
+    background:#091426;
+
+    padding:15px;
+
+    border-radius:10px;
+
+    line-height:1.6;
+
+}
+
+
+
+
+
+.answer {
+
+    background:
+
+    rgba(56,217,150,.15);
+
+    border:
+
+    1px solid var(--green);
+
+    padding:20px;
+
+    border-radius:12px;
+
+}
+
+
+
+
+.explanation {
+
+    color:var(--muted);
+
+    line-height:1.6;
+
+}
+
+
+
+
+
+.badge {
+
+    display:inline-block;
+
+    padding:
+
+    5px 12px;
+
+    border-radius:20px;
+
+    background:
+
+    rgba(109,140,255,.2);
+
+    color:#cbd6ff;
+
+    font-size:12px;
+
+}
+
+
+
+
+
+@media(max-width:900px){
+
+
+.pipeline{
+
+grid-template-columns:
+repeat(2,1fr);
+
+}
+
+
+.grid{
+
+grid-template-columns:1fr;
+
+}
+
+
+
+}
+
+
+
+</style>
+
+
+</head>
+
+
+
+<body>
+
+
+<div class="container">
+
+
+
+<div class="header">
+
+<h1>
+🧠 RAG Simulator
+</h1>
+
+
+<p>
+Learn Retrieval Augmented Generation step by step
+</p>
+
+
+</div>
+
+
+
+
+
+<!-- RAG PIPELINE -->
+
+<div class="pipeline">
+
+
+<div class="step active" id="step1">
+
+<span class="step-number">
+1
+</span>
+
+Document
+
+</div>
+
+
+
+<div class="step" id="step2">
+
+<span class="step-number">
+2
+</span>
+
+Chunking
+
+</div>
+
+
+
+<div class="step" id="step3">
+
+<span class="step-number">
+3
+</span>
+
+Embedding
+
+</div>
+
+
+
+<div class="step" id="step4">
+
+<span class="step-number">
+4
+</span>
+
+Vector DB
+
+</div>
+
+
+
+<div class="step" id="step5">
+
+<span class="step-number">
+5
+</span>
+
+Query
+
+</div>
+
+
+
+<div class="step" id="step6">
+
+<span class="step-number">
+6
+</span>
+
+Retrieval
+
+</div>
+
+
+
+<div class="step" id="step7">
+
+<span class="step-number">
+7
+</span>
+
+Augment
+
+</div>
+
+
+
+<div class="step" id="step8">
+
+<span class="step-number">
+8
+</span>
+
+Generate
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+<div class="grid">
+
+
+<div>
+
+
+
+<!-- USER QUERY -->
+
+
+<div class="card">
+
+
+<h2>
+❓ User Question
+</h2>
+
+
+<div class="question-box">
+
+
+<input 
+id="question"
+value="What is chunking?"
+>
+
+
+<button onclick="runRAG()">
+
+Run RAG
+
+</button>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+<!-- DOCUMENT -->
+
+
+<div class="card">
+
+
+<h2>
+📄 Knowledge Document
+</h2>
+
+
+<span class="badge">
+Source Data
+</span>
+
+
+<p>
+
+Chunking is the process of breaking large documents into smaller pieces called chunks.
+Chunks should contain enough information to preserve meaning but be small enough for efficient retrieval.
+Chunk size depends on the type of content. Books may be split by chapters, articles by paragraphs,
+and code by functions.
+
+</p>
+
+
+</div>
+
+
+
+
+
+
+<!-- CHUNKS -->
+
+
+<div class="card">
+
+
+<h2>
+✂️ Document Chunking
+</h2>
+
+
+<div id="chunks">
+
+
+<div class="chunk">
+
+Chunking is the process of breaking large documents into smaller pieces called chunks.
+
+</div>
+
+
+<div class="chunk">
+
+Chunks should contain enough information to preserve meaning but be small enough for efficient retrieval.
+
+</div>
+
+
+<div class="chunk">
+
+Chunk size depends on the type of content.
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+<!-- EMBEDDING -->
+
+
+<div class="card">
+
+
+<h2>
+🔢 Embedding
+</h2>
+
+
+<div id="embedding">
+
+
+Waiting for simulation...
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+<!-- RETRIEVAL -->
+
+
+<div class="card">
+
+
+<h2>
+🔍 Retrieval Results
+</h2>
+
+
+<div id="retrieval">
+
+Waiting for simulation...
+
+</div>
+
+
+</div>
+
+
+
+
+
+<!-- AUGMENT -->
+
+
+<div class="card">
+
+
+<h2>
+📝 Augmented Prompt
+</h2>
+
+
+<div id="prompt">
+
+Waiting for simulation...
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+<!-- ANSWER -->
+
+
+<div class="card">
+
+
+<h2>
+🤖 LLM Answer
+</h2>
+
+
+<div id="answer" class="answer">
+
+Waiting for simulation...
+
+</div>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+<!-- EXPLANATION PANEL -->
+
+
+<div>
+
+
+<div class="card">
+
+
+<h2>
+💡 Explanation
+</h2>
+
+
+<div id="explanation" class="explanation">
+
+Click "Run RAG" to see how retrieval augmented generation works.
+
+</div>
+
+
+</div>
+
+
+<div class="card">
+
+
+<h2>
+🏗 Architecture
+</h2>
+
+
+<div class="explanation">
+
+
+Documents
+
+<br>
+↓
+
+<br>
+
+Chunks
+
+<br>
+↓
+
+<br>
+
+Embeddings
+
+<br>
+↓
+
+<br>
+
+Vector Database
+
+<br>
+↓
+
+<br>
+
+Query Search
+
+<br>
+↓
+
+<br>
+
+Retrieved Context
+
+<br>
+↓
+
+<br>
+
+LLM Answer
+
+
+</div>
+
+
+</div>
+
+
+
+</div>
+
+<script>
+
+
+/*
+====================================================
+RAG SIMULATOR LOGIC
+
+Flow:
+
+Document
+   |
+Chunking
+   |
+Embedding
+   |
+Vector Database
+   |
+Query Embedding
+   |
+Similarity Search
+   |
+Augmented Prompt
+   |
+LLM Answer
+
+====================================================
+*/
+
+
+function sleep(ms){
+
+    return new Promise(
+        resolve => setTimeout(resolve, ms)
+    );
+
+}
+
+
+
+
+
+function activateStep(step){
+
+
+    document
+    .querySelectorAll(".step")
+    .forEach(item=>{
+
+        item.classList.remove("active");
+
+    });
+
+
+
+    document
+    .getElementById(step)
+    .classList.add("active");
+
+
+}
+
+
+
+
+
+async function runRAG(){
+
+
+const question =
+document.getElementById("question").value;
+
+
+
+
+/*
+====================================================
+STEP 1 - DOCUMENT
+====================================================
+*/
+
+
+activateStep("step1");
+
+
+document.getElementById("explanation").innerHTML=
+
+`
+
+<b>Step 1: Document</b>
+
+<br><br>
+
+RAG starts with external knowledge.
+The document is not part of the LLM's training data.
+
+<br><br>
+
+The document contains information about chunking.
+
+`;
+
+
+
+await sleep(1500);
+
+
+
+
+
+
+/*
+====================================================
+STEP 2 - CHUNKING
+====================================================
+*/
+
+
+activateStep("step2");
+
+
+
+document.getElementById("explanation").innerHTML=
+
+`
+
+<b>Step 2: Chunking</b>
+
+<br><br>
+
+Large documents are split into smaller pieces.
+
+<br><br>
+
+Why?
+
+<br>
+
+• Easier search
+
+<br>
+
+• Better relevance
+
+<br>
+
+• Less unnecessary context sent to the LLM
+
+`;
+
+
+
+document.getElementById("chunks").innerHTML=
+
+`
+
+<div class="chunk relevant">
+
+<b>Chunk 1</b>
+
+<br><br>
+
+Chunking is the process of breaking large documents into smaller pieces called chunks.
+
+</div>
+
+
+
+<div class="chunk">
+
+<b>Chunk 2</b>
+
+<br><br>
+
+Chunks should contain enough information to preserve meaning but be small enough for efficient retrieval.
+
+</div>
+
+
+
+<div class="chunk">
+
+<b>Chunk 3</b>
+
+<br><br>
+
+Chunk size depends on the type of content.
+
+</div>
+
+
+`;
+
+
+
+await sleep(1500);
+
+
+
+
+
+
+
+
+/*
+====================================================
+STEP 3 - EMBEDDING
+====================================================
+*/
+
+
+activateStep("step3");
+
+
+
+document.getElementById("embedding").innerHTML=
+
+`
+
+<p>
+
+Each chunk is converted into numbers representing meaning.
+
+</p>
+
+
+
+<div class="vector">
+
+Chunk 1 Vector:
+
+[0.21, 0.84, 0.45]
+
+</div>
+
+
+<br>
+
+
+<div class="vector">
+
+Chunk 2 Vector:
+
+[0.25, 0.79, 0.51]
+
+</div>
+
+
+<br>
+
+
+<div class="vector">
+
+Chunk 3 Vector:
+
+[0.62, 0.34, 0.72]
+
+</div>
+
+
+`;
+
+
+
+document.getElementById("explanation").innerHTML=
+
+`
+
+<b>Step 3: Embedding</b>
+
+<br><br>
+
+Embedding converts text into vectors.
+
+<br><br>
+
+Similar meanings create similar vectors.
+
+`;
+
+
+
+await sleep(1500);
+
+
+
+
+
+
+
+
+/*
+====================================================
+STEP 4 - VECTOR DATABASE
+====================================================
+*/
+
+
+activateStep("step4");
+
+
+
+document.getElementById("explanation").innerHTML=
+
+`
+
+<b>Step 4: Vector Database</b>
+
+<br><br>
+
+The vectors and original text are stored together.
+
+<br><br>
+
+Example:
+
+<br>
+
+Vector → Chunk Text → Metadata
+
+`;
+
+
+
+await sleep(1500);
+
+
+
+
+
+
+
+
+/*
+====================================================
+STEP 5 - QUERY EMBEDDING
+====================================================
+*/
+
+
+activateStep("step5");
+
+
+
+document.getElementById("embedding").innerHTML=
+
+`
+
+<p>
+
+User Question:
+
+<br>
+
+"${question}"
+
+</p>
+
+
+<div class="vector">
+
+Query Vector:
+
+[0.22, 0.82, 0.48]
+
+</div>
+
+
+`;
+
+
+
+document.getElementById("explanation").innerHTML=
+
+`
+
+<b>Step 5: Query Embedding</b>
+
+<br><br>
+
+The user question is also converted into a vector.
+
+<br><br>
+
+Now we can compare:
+
+<br>
+
+Question Vector ↔ Document Vectors
+
+`;
+
+
+
+await sleep(1500);
+
+
+
+
+
+
+
+/*
+====================================================
+STEP 6 - RETRIEVAL
+====================================================
+*/
+
+
+activateStep("step6");
+
+
+
+document.getElementById("retrieval").innerHTML=
+
+`
+
+<div class="chunk relevant">
+
+
+<b>Retrieved Chunk 1</b>
+
+
+<br><br>
+
+
+Chunking is the process of breaking large documents into smaller pieces called chunks.
+
+
+<br><br>
+
+
+Similarity:
+
+<span class="score">
+
+96%
+
+</span>
+
+
+</div>
+
+
+
+
+<div class="chunk">
+
+
+<b>Retrieved Chunk 2</b>
+
+
+<br><br>
+
+
+Chunks should contain enough information to preserve meaning but be small enough for efficient retrieval.
+
+
+<br><br>
+
+
+Similarity:
+
+<span class="score">
+
+88%
+
+</span>
+
+
+</div>
+
+
+`;
+
+
+
+document.getElementById("explanation").innerHTML=
+
+`
+
+<b>Step 6: Retrieval</b>
+
+<br><br>
+
+The system finds the most relevant chunks.
+
+<br><br>
+
+Usually the top few results (Top-K) are returned.
+
+`;
+
+
+
+await sleep(1500);
+
+
+
+
+
+
+
+/*
+====================================================
+STEP 7 - AUGMENTATION
+====================================================
+*/
+
+
+activateStep("step7");
+
+
+
+document.getElementById("prompt").innerHTML=
+
+`
+
+<div class="prompt">
+
+
+<b>System Instruction:</b>
+
+<br>
+
+Answer only using the provided context.
+
+<br><br>
+
+
+<b>Context:</b>
+
+<br>
+
+Chunk 1:
+
+<br>
+
+Chunking is the process of breaking large documents into smaller pieces called chunks.
+
+<br><br>
+
+
+Chunk 2:
+
+<br>
+
+Chunks preserve meaning while improving retrieval.
+
+<br><br>
+
+
+<b>User Question:</b>
+
+<br>
+
+${question}
+
+
+
+</div>
+
+
+`;
+
+
+
+
+document.getElementById("explanation").innerHTML=
+
+`
+
+<b>Step 7: Augmentation</b>
+
+<br><br>
+
+RAG creates a new prompt:
+
+<br><br>
+
+User Question + Retrieved Context
+
+<br><br>
+
+This gives the LLM the knowledge needed to answer.
+
+`;
+
+
+
+await sleep(1500);
+
+
+
+
+
+
+
+/*
+====================================================
+STEP 8 - GENERATION
+====================================================
+*/
+
+
+activateStep("step8");
+
+
+
+document.getElementById("answer").innerHTML=
+
+`
+
+<b>Chunking</b> is the process of breaking large documents into smaller pieces called chunks.
+
+<br><br>
+
+Chunks make information easier to search and retrieve.
+The right chunk size keeps enough meaning while avoiding unnecessary information.
+
+`;
+
+
+
+document.getElementById("explanation").innerHTML=
+
+`
+
+<b>Step 8: Generation</b>
+
+<br><br>
+
+The LLM generates the final response using the retrieved context.
+
+<br><br>
+
+The model did not memorize this answer from the document.
+
+It received the information at runtime through RAG.
+
+`;
+
+
+
+}
+
+
+
+</script>
+
+
+</body>
+
+</html>
+
+</div>
