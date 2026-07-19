@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>RAG Simulator</title>
+
+<style>
+
+body {
+    margin:0;
+    font-family:Arial, sans-serif;
+    background:#0b1020;
+    color:white;
+}
+
+.container{
+    max-width:1100px;
+    margin:auto;
+    padding:30px;
+}
+
+
+h1{
+    text-align:center;
+    color:#7ea0ff;
+}
+
+
+.pipeline{
+
+    display:flex;
+    gap:10px;
+    margin:30px 0;
+    flex-wrap:wrap;
+
+}
+
+
+.step{
+
+    flex:1;
+    min-width:120px;
+
+    padding:15px;
+
+    text-align:center;
+
+    background:#18233f;
+
+    border-radius:12px;
+
+    border:1px solid #33446d;
+
+    transition:.4s;
+
+}
+
+
+.active{
+
+    background:#385cff;
+
+    transform:scale(1.05);
+
+}
+
+
+
+.card{
+
+    background:#141d35;
+
+    padding:25px;
+
+    margin:20px 0;
+
+    border-radius:16px;
+
+    border:1px solid #33446d;
+
+}
+
+
+
+input{
+
+    width:80%;
+
+    padding:15px;
+
+    border-radius:10px;
+
+    border:none;
+
+    font-size:16px;
+
+}
+
+
+button{
+
+    padding:15px 20px;
+
+    background:#385cff;
+
+    color:white;
+
+    border:none;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+}
+
+
+
+.chunk{
+
+    background:#202d50;
+
+    padding:15px;
+
+    margin:10px 0;
+
+    border-radius:10px;
+
+}
+
+
+.label{
+
+    color:#8ca7ff;
+
+    font-weight:bold;
+
+}
+
+
+
+.answer{
+
+    background:#123d2c;
+
+    padding:20px;
+
+    border-radius:12px;
+
+}
+
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+<h1>
+🧠 RAG Simulator
+</h1>
+
+
+<div class="pipeline">
+
+
+<div class="step" id="s1">
+1. Query
+</div>
+
+
+<div class="step" id="s2">
+2. Retrieval
+</div>
+
+
+<div class="step" id="s3">
+3. Context
+</div>
+
+
+<div class="step" id="s4">
+4. Generation
+</div>
+
+
+</div>
+
+
+
+<div class="card">
+
+
+<h2>
+Ask a Question
+</h2>
+
+
+<input id="query"
+value="How many vehicles did Tesla deliver?">
+
+
+<button onclick="runRAG()">
+
+Run RAG
+
+</button>
+
+
+</div>
+
+
+
+
+<div class="card">
+
+
+<h2>
+📚 Knowledge Base
+</h2>
+
+
+<p>
+
+RAG does not change the LLM.
+It searches your private data first.
+
+</p>
+
+
+<div class="chunk">
+
+Document 1:
+
+Tesla delivered 1.8 million vehicles globally in 2025.
+
+</div>
+
+
+<div class="chunk">
+
+Document 2:
+
+Tesla invests in autonomous driving and artificial intelligence.
+
+</div>
+
+
+<div class="chunk">
+
+Document 3:
+
+Tesla provides vehicle service and warranty support.
+
+</div>
+
+
+</div>
+
+
+
+
+
+<div class="card">
+
+
+<h2>
+🔍 Retrieved Chunks
+</h2>
+
+
+<div id="retrieval">
+
+Waiting...
+
+</div>
+
+
+</div>
+
+
+
+
+
+<div class="card">
+
+
+<h2>
+📝 Augmented Prompt
+</h2>
+
+
+<div id="prompt">
+
+Waiting...
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+<div class="card">
+
+
+<h2>
+🤖 LLM Answer
+</h2>
+
+
+<div id="answer" class="answer">
+
+Waiting...
+
+</div>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+<script>
+
+
+function activate(step){
+
+document.querySelectorAll(".step")
+.forEach(x=>x.classList.remove("active"));
+
+
+document.getElementById(step)
+.classList.add("active");
+
+}
+
+
+
+function wait(ms){
+
+return new Promise(
+resolve=>setTimeout(resolve,ms)
+);
+
+}
+
+
+
+async function runRAG(){
+
+
+let query =
+document.getElementById("query").value;
+
+
+
+// Step 1
+
+activate("s1");
+
+await wait(1000);
+
+
+
+document.getElementById("retrieval").innerHTML=
+`
+<div class="chunk">
+
+Query converted into embedding vector
+
+<br>
+
+Example:
+
+[0.24,0.76,0.91...]
+
+</div>
+`;
+
+
+
+// Step 2 Retrieval
+
+
+activate("s2");
+
+await wait(1500);
+
+
+
+document.getElementById("retrieval").innerHTML=
+`
+
+<div class="chunk">
+
+<strong>Chunk 1</strong>
+
+<br>
+
+Tesla delivered 1.8 million vehicles globally in 2025.
+
+<br>
+
+Similarity: 94%
+
+</div>
+
+`;
+
+
+
+
+// Step 3 Augmentation
+
+
+activate("s3");
+
+await wait(1500);
+
+
+
+document.getElementById("prompt").innerHTML=
+
+`
+
+<strong>User Question:</strong>
+
+${query}
+
+<br><br>
+
+<strong>Retrieved Context:</strong>
+
+<br>
+
+Tesla delivered 1.8 million vehicles globally in 2025.
+
+<br><br>
+
+The system sends this combined prompt to the LLM.
+
+`;
+
+
+
+// Step 4 Generation
+
+
+activate("s4");
+
+await wait(2000);
+
+
+
+document.getElementById("answer").innerHTML=
+
+`
+
+Tesla delivered <strong>1.8 million vehicles</strong>
+globally in 2025.
+
+<br><br>
+
+The answer came from retrieved company data,
+not from changing the model.
+
+`;
+
+
+
+}
+
+
+</script>
+
+
+</body>
+
+</html>
