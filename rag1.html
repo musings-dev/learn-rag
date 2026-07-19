@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RAG Simulator - Learn Retrieval Augmented Generation</title>
+
+<style>
+
+:root{
+    --bg:#08111f;
+    --card:#132039;
+    --card2:#1b2b4a;
+    --blue:#6d8cff;
+    --green:#38d996;
+    --text:#f4f7ff;
+    --muted:#aab6d5;
+    --border:#31466d;
+}
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+
+    margin:0;
+    font-family:
+    Inter,
+    Arial,
+    sans-serif;
+
+    background:
+    radial-gradient(circle at top,#20376b,transparent 40%),
+    var(--bg);
+
+    color:var(--text);
+
+}
+
+
+.container{
+
+    max-width:1100px;
+    margin:auto;
+    padding:30px;
+
+}
+
+
+h1{
+
+    text-align:center;
+    color:var(--blue);
+
+}
+
+
+.subtitle{
+
+    text-align:center;
+    color:var(--muted);
+    margin-bottom:30px;
+
+}
+
+
+.pipeline{
+
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:25px;
+
+}
+
+
+.step{
+
+    flex:1;
+    min-width:120px;
+
+    background:var(--card);
+    border:1px solid var(--border);
+
+    padding:15px;
+    text-align:center;
+
+    border-radius:12px;
+
+    transition:.3s;
+
+}
+
+
+.active{
+
+    background:var(--blue);
+    transform:translateY(-5px);
+
+}
+
+
+
+.card{
+
+    background:var(--card);
+
+    border:
+    1px solid var(--border);
+
+    border-radius:15px;
+
+    padding:20px;
+
+    margin-bottom:20px;
+
+}
+
+
+
+input{
+
+    width:75%;
+
+    padding:14px;
+
+    border-radius:10px;
+
+    border:none;
+
+    background:#091427;
+
+    color:white;
+
+    font-size:16px;
+
+}
+
+
+
+button{
+
+    padding:14px 20px;
+
+    border:none;
+
+    border-radius:10px;
+
+    background:var(--blue);
+
+    color:white;
+
+    cursor:pointer;
+
+}
+
+
+
+.chunk{
+
+    background:var(--card2);
+
+    padding:15px;
+
+    border-radius:10px;
+
+    margin:10px 0;
+
+}
+
+
+
+.vector{
+
+    color:#7dffbf;
+
+    font-family:monospace;
+
+}
+
+
+
+.score{
+
+    color:var(--green);
+
+    font-weight:bold;
+
+}
+
+
+
+.prompt{
+
+    background:#091427;
+
+    padding:15px;
+
+    border-radius:10px;
+
+}
+
+
+
+.answer{
+
+    background:
+    rgba(56,217,150,.15);
+
+    border:
+    1px solid var(--green);
+
+    padding:20px;
+
+    border-radius:10px;
+
+}
+
+
+
+.explanation{
+
+    color:var(--muted);
+
+    line-height:1.6;
+
+}
+
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+<h1>
+🧠 RAG Simulator
+</h1>
+
+
+<div class="subtitle">
+Understand Retrieval Augmented Generation visually
+</div>
+
+
+
+
+<div class="pipeline">
+
+
+<div class="step active" id="s1">
+1. Query
+</div>
+
+
+<div class="step" id="s2">
+2. Embedding
+</div>
+
+
+<div class="step" id="s3">
+3. Retrieval
+</div>
+
+
+<div class="step" id="s4">
+4. Augment
+</div>
+
+
+<div class="step" id="s5">
+5. Generate
+</div>
+
+
+</div>
+
+
+
+
+
+<div class="card">
+
+<h2>
+Ask the Document
+</h2>
+
+
+<input id="question"
+value="How much do Messi World Cup final tickets cost?">
+
+
+<button onclick="runRAG()">
+Run RAG
+</button>
+
+
+</div>
+
+
+
+
+
+
+<div class="card">
+
+<h2>
+📚 Knowledge Base
+</h2>
+
+
+<p class="explanation">
+
+This is the external knowledge that RAG retrieves.
+The LLM itself is unchanged.
+
+</p>
+
+
+
+<div class="chunk">
+
+<b>Chunk 1</b><br><br>
+
+Last-minute tickets to see Lionel Messi and Argentina face Spain in the FIFA World Cup final range from $10,000 to $60,000.
+
+</div>
+
+
+
+<div class="chunk">
+
+<b>Chunk 2</b><br><br>
+
+FIFA official resale tickets were listed at $6,411.25 for a mid-level view.
+
+</div>
+
+
+
+<div class="chunk">
+
+<b>Chunk 3</b><br><br>
+
+Hospitality seats reached nearly $60,000.
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+<div class="card">
+
+<h2>
+🔍 Retrieval Result
+</h2>
+
+<div id="retrieval">
+
+Waiting...
+
+</div>
+
+</div>
+
+
+
+
+
+<div class="card">
+
+<h2>
+📝 Augmented Prompt
+</h2>
+
+
+<div id="prompt">
+
+Waiting...
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+<div class="card">
+
+<h2>
+🤖 LLM Answer
+</h2>
+
+
+<div id="answer" class="answer">
+
+Waiting...
+
+</div>
+
+
+</div>
+
+
+
+
+
+<div class="card">
+
+<h2>
+💡 What is happening?
+</h2>
+
+
+<div id="explanation"
+class="explanation">
+
+Click "Run RAG" to see the pipeline.
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+<script>
+
+
+function activate(step){
+
+document.querySelectorAll(".step")
+.forEach(x=>x.classList.remove("active"));
+
+document.getElementById(step)
+.classList.add("active");
+
+}
+
+
+
+function wait(ms){
+
+return new Promise(
+resolve=>setTimeout(resolve,ms)
+);
+
+}
+
+
+
+
+
+async function runRAG(){
+
+
+let question=
+document.getElementById("question").value;
+
+
+
+
+// QUERY
+
+activate("s1");
+
+document.getElementById("explanation").innerHTML=
+
+`
+<b>Step 1: Query</b><br><br>
+
+The user asks a question.
+RAG starts by understanding what information is needed.
+
+`;
+
+await wait(1500);
+
+
+
+
+// EMBEDDING
+
+activate("s2");
+
+
+document.getElementById("retrieval").innerHTML=
+
+`
+
+<div class="chunk">
+
+The question is converted into a vector.
+
+<br><br>
+
+<div class="vector">
+
+[0.24, 0.81, 0.45, 0.92]
+
+</div>
+
+
+</div>
+
+`;
+
+
+document.getElementById("explanation").innerHTML=
+
+`
+<b>Step 2: Embedding</b><br><br>
+
+The query is converted into numbers representing meaning.
+This allows comparison with document chunks.
+
+`;
+
+await wait(1500);
+
+
+
+
+// RETRIEVAL
+
+
+activate("s3");
+
+
+document.getElementById("retrieval").innerHTML=
+
+`
+
+<div class="chunk">
+
+<b>Retrieved Chunk 1</b><br><br>
+
+Tickets range from $10,000 to $60,000.
+
+<br><br>
+
+Similarity:
+
+<span class="score">
+96%
+</span>
+
+</div>
+
+
+<div class="chunk">
+
+<b>Retrieved Chunk 2</b><br><br>
+
+Official resale tickets started at $6,411.25.
+
+<br><br>
+
+Similarity:
+
+<span class="score">
+91%
+</span>
+
+</div>
+
+`;
+
+
+document.getElementById("explanation").innerHTML=
+
+`
+<b>Step 3: Retrieval</b><br><br>
+
+The system searches the knowledge base and retrieves only relevant chunks.
+
+This avoids sending all documents to the LLM.
+
+`;
+
+await wait(1500);
+
+
+
+
+
+// AUGMENTATION
+
+
+activate("s4");
+
+
+document.getElementById("prompt").innerHTML=
+
+`
+
+<b>User Question:</b>
+
+<br>
+
+${question}
+
+<br><br>
+
+
+<b>Retrieved Context:</b>
+
+<br>
+
+- Tickets range from $10,000 to $60,000
+
+<br>
+
+- Cheapest official ticket: $6,411.25
+
+
+<br><br>
+
+<b>Instruction:</b>
+
+Answer only using the provided context.
+
+`;
+
+
+document.getElementById("explanation").innerHTML=
+
+`
+<b>Step 4: Augmentation</b><br><br>
+
+The system creates a new prompt by combining:
+
+<br><br>
+
+User question + Retrieved documents
+
+<br><br>
+
+This is why it is called Retrieval Augmented Generation.
+
+`;
+
+await wait(1500);
+
+
+
+
+// GENERATION
+
+
+activate("s5");
+
+
+document.getElementById("answer").innerHTML=
+
+`
+
+Tickets to watch Messi and Argentina face Spain
+in the FIFA World Cup final range from
+
+<b>$10,000 to $60,000.</b>
+
+<br><br>
+
+The cheapest official resale ticket was listed at
+<b>$6,411.25</b>.
+
+`;
+
+
+document.getElementById("explanation").innerHTML=
+
+`
+<b>Step 5: Generation</b><br><br>
+
+The LLM receives the augmented prompt and generates an answer.
+
+The model did not learn this article.
+It used retrieved context at runtime.
+
+`;
+
+}
+
+
+</script>
+
+
+</body>
+
+</html>
