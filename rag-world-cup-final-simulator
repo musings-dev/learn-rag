@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>RAG Simulator - FIFA Article</title>
+
+<style>
+
+body{
+
+font-family:Arial,sans-serif;
+background:#0b1020;
+color:white;
+margin:0;
+
+}
+
+.container{
+
+max-width:1100px;
+margin:auto;
+padding:30px;
+
+}
+
+
+h1{
+
+text-align:center;
+color:#7ea0ff;
+
+}
+
+
+
+.pipeline{
+
+display:flex;
+gap:10px;
+margin:30px 0;
+flex-wrap:wrap;
+
+}
+
+
+
+.step{
+
+flex:1;
+padding:15px;
+background:#18233f;
+border-radius:12px;
+text-align:center;
+border:1px solid #33446d;
+
+}
+
+
+
+.active{
+
+background:#385cff;
+
+}
+
+
+
+.card{
+
+background:#141d35;
+padding:25px;
+border-radius:16px;
+margin:20px 0;
+border:1px solid #33446d;
+
+}
+
+
+button{
+
+background:#385cff;
+color:white;
+padding:14px 20px;
+border:none;
+border-radius:10px;
+cursor:pointer;
+
+}
+
+
+input{
+
+width:75%;
+padding:14px;
+border-radius:10px;
+border:none;
+
+}
+
+
+
+.chunk{
+
+background:#202d50;
+padding:15px;
+margin:10px 0;
+border-radius:10px;
+
+}
+
+
+
+.answer{
+
+background:#123d2c;
+padding:20px;
+border-radius:12px;
+
+}
+
+
+
+.small{
+
+color:#9da9c9;
+font-size:14px;
+
+}
+
+
+
+</style>
+
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+<h1>
+🧠 RAG Simulator
+<br>
+⚽ FIFA World Cup Article
+</h1>
+
+
+
+<div class="pipeline">
+
+
+<div class="step" id="s1">
+1. Query
+</div>
+
+
+<div class="step" id="s2">
+2. Retrieve
+</div>
+
+
+<div class="step" id="s3">
+3. Augment
+</div>
+
+
+<div class="step" id="s4">
+4. Generate
+</div>
+
+
+</div>
+
+
+
+
+<div class="card">
+
+
+<h2>
+Ask the Document
+</h2>
+
+
+<input id="query"
+
+value="How much do tickets cost to watch Messi and Argentina play Spain?">
+
+
+<button onclick="runRAG()">
+
+Run RAG
+
+</button>
+
+
+</div>
+
+
+
+
+
+
+<div class="card">
+
+
+<h2>
+📚 Knowledge Base
+
+</h2>
+
+
+<p class="small">
+
+This is your private data.
+The LLM does not know this document unless we retrieve it.
+
+</p>
+
+
+
+<div class="chunk">
+
+<strong>Chunk 1</strong>
+
+<br><br>
+
+Last-minute tickets to see Lionel Messi and Argentina face Spain in the FIFA World Cup final range from $10,000 to $60,000.
+
+</div>
+
+
+
+
+<div class="chunk">
+
+<strong>Chunk 2</strong>
+
+<br><br>
+
+FIFA's official resale site listed its cheapest tickets at $6,411.25 for a mid-level view behind the goal. Those tickets disappeared by lunchtime.
+
+</div>
+
+
+
+
+<div class="chunk">
+
+<strong>Chunk 3</strong>
+
+<br><br>
+
+Upper deck tickets were listed around $10,000. Lower bowl seats approached $35,000 and hospitality seats reached nearly $60,000.
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+<div class="card">
+
+
+<h2>
+
+🔍 Retrieval Step
+
+</h2>
+
+
+<div id="retrieval">
+
+Waiting...
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+<div class="card">
+
+
+<h2>
+
+📝 Augmented Prompt
+
+</h2>
+
+
+<div id="prompt">
+
+Waiting...
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+<div class="card">
+
+
+<h2>
+
+🤖 Generated Answer
+
+</h2>
+
+
+<div id="answer" class="answer">
+
+Waiting...
+
+</div>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+<script>
+
+
+
+function activate(id){
+
+document.querySelectorAll(".step")
+.forEach(x=>x.classList.remove("active"));
+
+
+document.getElementById(id)
+.classList.add("active");
+
+
+}
+
+
+
+function sleep(ms){
+
+return new Promise(
+r=>setTimeout(r,ms)
+);
+
+}
+
+
+
+
+
+async function runRAG(){
+
+
+let query =
+document.getElementById("query").value;
+
+
+
+// QUERY
+
+
+activate("s1");
+
+
+await sleep(1000);
+
+
+
+document.getElementById("retrieval").innerHTML=
+
+`
+
+<div class="chunk">
+
+The question is converted into an embedding.
+
+<br><br>
+
+Query Vector:
+
+[0.21,0.87,0.44,0.92...]
+
+<br>
+
+The system searches for chunks with similar meaning.
+
+</div>
+
+`;
+
+
+
+// RETRIEVE
+
+
+activate("s2");
+
+
+await sleep(1500);
+
+
+
+document.getElementById("retrieval").innerHTML=
+
+`
+
+<div class="chunk">
+
+<strong>Retrieved Chunk 1</strong>
+
+<br><br>
+
+Tickets range from $10,000 to $60,000.
+
+<br>
+
+Similarity Score: 96%
+
+</div>
+
+
+<div class="chunk">
+
+<strong>Retrieved Chunk 2</strong>
+
+<br><br>
+
+Official resale tickets started at $6,411.25.
+
+<br>
+
+Similarity Score: 91%
+
+</div>
+
+
+
+<div class="chunk">
+
+<strong>Retrieved Chunk 3</strong>
+
+<br><br>
+
+Hospitality seats reached nearly $60,000.
+
+<br>
+
+Similarity Score: 89%
+
+</div>
+
+`;
+
+
+
+// AUGMENT
+
+
+activate("s3");
+
+
+await sleep(1500);
+
+
+
+document.getElementById("prompt").innerHTML=
+
+`
+
+<strong>Original Question:</strong>
+
+<br>
+
+${query}
+
+<br><br>
+
+
+<strong>Retrieved Context:</strong>
+
+<br>
+
+- Tickets range from $10,000 to $60,000
+
+<br>
+
+- Cheapest official resale ticket: $6,411.25
+
+<br>
+
+- Hospitality seats: nearly $60,000
+
+<br><br>
+
+
+The system creates a new prompt:
+
+<br><br>
+
+"Answer the question using only the provided context."
+
+`;
+
+
+
+
+
+// GENERATE
+
+
+activate("s4");
+
+
+await sleep(2000);
+
+
+
+document.getElementById("answer").innerHTML=
+
+`
+
+Tickets to watch Messi and Argentina face Spain in the World Cup final range from approximately
+
+<strong>
+
+$10,000 to $60,000.
+
+</strong>
+
+
+<br><br>
+
+
+The cheapest official resale ticket was listed at
+
+<strong>
+
+$6,411.25,
+
+</strong>
+
+while premium hospitality seats reached nearly
+
+<strong>
+
+$60,000.
+
+</strong>
+
+
+`;
+
+
+
+
+}
+
+
+
+</script>
+
+
+</body>
+
+
+</html>
